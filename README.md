@@ -44,13 +44,6 @@ free window (setup mode)
 **7.** Daily use: double-click **`START.bat`**
 (desktop icon: right-click it → Send to → Desktop)
 
-## Optional: Mond fonts
-
-The clock uses **Anurati** (day) and **Quicksand** (date/time) if
-installed — both free fonts. Without them it falls back to Segoe UI
-cleanly. For the exact Rainmeter look: download each font → right-click
-the `.ttf` → Install → restart the launcher.
-
 ## Lock it down for real (recommended)
 
 Out of the box, the app is honor-system: you could delete its files
@@ -70,21 +63,31 @@ does this once:
 Result: deleting the app, resetting the password, or killing the
 protection all require the admin password — which you don't know.
 
+## Using it alone? (no family around)
+
+The password only works if YOU don't know it. Solo tricks:
+
+- **The random mash:** look away from the screen and mash 20+ random
+  characters into the password boxes (copy-paste the same mash into
+  both). Now nobody on Earth knows it 
+- **The remote friend:** any friend types a password over a call and
+  keeps it in their phone. Instant "family member," remote edition
+- **The envelope:** write it on paper, seal it, leave it somewhere
+  genuinely annoying to reach
+
+Even as an admin who could technically rip the app out — every extra
+step is a chance for the craving to die. Cravings live 2–5 minutes;
+friction just has to outlast the wave.
+
 ## Common questions
 
-**Forgot to add an app?** Family enters the password → Settings → add it.
-
-**Change the password?** An admin deletes
-`C:\ProgramData\ProductivityLauncher\password.dat` → open the app →
-set a new one.
-
-**Something broke?** Delete `config.json` next to the app — it rebuilds
-fresh settings on next start.
+**Forgot to add an app?** Whoever holds the password enters it →
+Settings → add it.
 
 **Can an expert bypass it?** A true administrator can beat ANY blocker —
-Cold Turkey included. That's why step 3 above matters: no admin rights,
-no bypass. The app's job is stopping *you at 1 AM*, and locked down
-properly, it does 😄
+Cold Turkey included. That's why the Standard-account step matters:
+no admin rights, no bypass. The app's job is stopping *you at 1 AM*,
+and locked down properly, it does 
 
 ## Built with
 
@@ -93,4 +96,4 @@ the whole app is two files.
 
 ## License
 
-MIT — free to use, copy, and improve.DO NOT FORGET CREADITS!
+MIT — free to use, copy, and improve.DO NOT FORGET CREADITS
