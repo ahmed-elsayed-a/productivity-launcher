@@ -132,6 +132,43 @@ def set_password(pw):
 
 
 # ---------------------------------------------------------------------
+# Auto-start (per-user, via the Startup folder)
+# ---------------------------------------------------------------------
+def startup_dir():
+    return os.path.join(os.environ.get("APPDATA", ""),
+                        "Microsoft", "Windows", "Start Menu",
+                        "Programs", "Startup")
+
+
+def autostart_file():
+    return os.path.join(startup_dir(), "ProductivityLauncher.bat")
+
+
+def autostart_enabled():
+    return os.path.exists(autostart_file())
+
+
+def enable_autostart():
+    """Write a tiny .bat into THIS user's Startup folder."""
+    guardian = os.path.join(BASE_DIR, "guardian.py")
+    content = (
+        "@echo off\r\n"
+        f'cd /d "{BASE_DIR}"\r\n'
+        f'start "" pythonw "{guardian}"\r\n'
+    )
+    os.makedirs(startup_dir(), exist_ok=True)
+    with open(autostart_file(), "w") as f:
+        f.write(content)
+
+
+def disable_autostart():
+    try:
+        os.remove(autostart_file())
+    except FileNotFoundError:
+        pass
+
+
+# ---------------------------------------------------------------------
 # WHITELIST watchdog — closes every window that isn't allowed
 # ---------------------------------------------------------------------
 # windows that must never be touched (system/shell)
@@ -676,6 +713,34 @@ class Launcher:
                   font=("Segoe UI", 9), command=auto_wall).pack(side="right", padx=4, pady=6)
         tk.Button(wp, text="Choose image", bg="#2a3550", fg="white", relief="flat",
                   font=("Segoe UI", 9), command=pick_wall).pack(side="right", padx=4, pady=6)
+
+        # auto-start toggle
+        au = tk.Frame(win, bg=self.CARD)
+        au.pack(fill="x", padx=18, pady=(8, 0))
+        state = autostart_enabled()
+        au_label = tk.Label(
+            au, text=f"🚀 Auto-start on login: {'ON ✅' if state else 'OFF'}",
+            font=("Segoe UI", 10), bg=self.CARD, fg=self.TEXT)
+        au_label.pack(side="left", padx=12, pady=8)
+
+        def toggle_autostart():
+            if autostart_enabled():
+                # turning OFF = escape hatch -> needs the family password
+                def do_off():
+                    disable_autostart()
+                    refresh()
+                self.password_gate("Password to disable auto-start", do_off)
+            else:
+                try:
+                    enable_autostart()
+                except Exception as e:
+                    messagebox.showerror("Couldn't enable", str(e))
+                refresh()
+
+        tk.Button(au, text="Turn OFF" if state else "Turn ON",
+                  bg="#2a3550" if state else self.BLUE, fg="white",
+                  relief="flat", font=("Segoe UI", 9, "bold"), padx=12,
+                  command=toggle_autostart).pack(side="right", padx=8, pady=6)
 
         # password
         pw = tk.Frame(win, bg=self.CARD)
@@ -3481,7 +3546,5 @@ WALLPAPERS_B64 = [
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/Z"
     ),
 ]
-
-
 if __name__ == "__main__":
     Launcher().run()
