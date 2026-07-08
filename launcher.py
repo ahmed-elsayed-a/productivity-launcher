@@ -49,7 +49,22 @@ except ImportError:
 # ---------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
-PASSWORD_FILE = os.path.join(BASE_DIR, "password.dat")
+
+# password.dat lives in ProgramData — admin can protect it there while
+# the launcher (running as a normal user) can still read it.
+DATA_DIR = os.path.join(os.environ.get("ProgramData", BASE_DIR),
+                        "ProductivityLauncher")
+PASSWORD_FILE = os.path.join(DATA_DIR, "password.dat")
+
+# migrate: if an old password.dat sits next to the app, move it over
+_old_pw = os.path.join(BASE_DIR, "password.dat")
+if os.path.exists(_old_pw) and not os.path.exists(PASSWORD_FILE):
+    try:
+        os.makedirs(DATA_DIR, exist_ok=True)
+        import shutil
+        shutil.move(_old_pw, PASSWORD_FILE)
+    except Exception:
+        PASSWORD_FILE = _old_pw   # fall back if we can't write there
 
 DEFAULT_CONFIG = {
     "planner_url": "https://ahmed-elsayed-a.github.io",
@@ -127,6 +142,7 @@ def check_password(attempt):
 
 def set_password(pw):
     salt = os.urandom(16)
+    os.makedirs(os.path.dirname(PASSWORD_FILE), exist_ok=True)
     with open(PASSWORD_FILE, "w") as f:
         f.write(salt.hex() + ":" + hashlib.sha256(salt + pw.encode()).hexdigest())
 
@@ -3546,5 +3562,7 @@ WALLPAPERS_B64 = [
         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAf/Z"
     ),
 ]
+
+
 if __name__ == "__main__":
     Launcher().run()
