@@ -51,16 +51,40 @@ installed — both free fonts. Without them it falls back to Segoe UI
 cleanly. For the exact Rainmeter look: download each font → right-click
 the `.ttf` → Install → restart the launcher.
 
+## Lock it down for real (recommended)
+
+Out of the box, the app is honor-system: you could delete its files
+yourself. To make it genuinely tamper-proof, an ADMIN (family member)
+does this once:
+
+1. **Move the folder** to `C:\Program Files\ProductivityLauncher`
+   (copy it there, delete the old one — needs admin approval)
+2. **Update your shortcuts** (desktop + auto-start toggle: turn it
+   OFF → ON once in Settings so it learns the new path)
+3. **Your daily account must be a Standard user, not Administrator**
+   (Settings → Accounts → Family & other users)
+4. The password file lives in `C:\ProgramData\ProductivityLauncher\` —
+   the admin can restrict it: right-click → Properties → Security →
+   your user: Read only
+
+Result: deleting the app, resetting the password, or killing the
+protection all require the admin password — which you don't know.
+
 ## Common questions
 
 **Forgot to add an app?** Family enters the password → Settings → add it.
 
-**Change the password?** Delete `password.dat` → open the app → set a new one.
+**Change the password?** An admin deletes
+`C:\ProgramData\ProductivityLauncher\password.dat` → open the app →
+set a new one.
 
-**Something broke?** Delete `config.json` → the app rebuilds fresh settings.
+**Something broke?** Delete `config.json` next to the app — it rebuilds
+fresh settings on next start.
 
-**Can an expert bypass it?** With admin rights or Safe Mode, yes.
-It's not anti-hacker — it's anti *you at 1 AM*. Different enemy 😄
+**Can an expert bypass it?** A true administrator can beat ANY blocker —
+Cold Turkey included. That's why step 3 above matters: no admin rights,
+no bypass. The app's job is stopping *you at 1 AM*, and locked down
+properly, it does 😄
 
 ## Built with
 
@@ -69,4 +93,4 @@ the whole app is two files.
 
 ## License
 
-MIT — free to use, copy, and improve don't forget creadits.
+MIT — free to use, copy, and improve.DO NOT FORGET CREADITS!
