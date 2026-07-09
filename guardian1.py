@@ -7,6 +7,9 @@ Runs quietly in the background. If launcher.py gets killed
 The only clean way to stop everything is the password inside the
 launcher — which sets a "stop flag" file that guardian respects.
 
+The stop flag lives in ProgramData (same writable home as config.json
+and password.dat) because Program Files is read-only for standard users.
+
 Run (it starts the launcher itself):
     pythonw guardian.py        <- pythonw = no console window
 """
@@ -18,7 +21,20 @@ import time
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 LAUNCHER = os.path.join(BASE_DIR, "launcher.py")
-STOP_FLAG = os.path.join(BASE_DIR, "stop.flag")   # created on clean password exit
+
+# same writable data dir as the launcher (ProgramData, with fallback)
+DATA_DIR = os.path.join(os.environ.get("ProgramData", BASE_DIR),
+                        "ProductivityLauncher")
+try:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    _probe = os.path.join(DATA_DIR, ".write_test")
+    with open(_probe, "w") as _f:
+        _f.write("ok")
+    os.remove(_probe)
+except Exception:
+    DATA_DIR = BASE_DIR
+
+STOP_FLAG = os.path.join(DATA_DIR, "stop.flag")
 
 CHECK_EVERY = 3   # seconds
 
@@ -50,7 +66,10 @@ def start_launcher():
 def main():
     # fresh session: remove any old stop flag
     if os.path.exists(STOP_FLAG):
-        os.remove(STOP_FLAG)
+        try:
+            os.remove(STOP_FLAG)
+        except Exception:
+            pass
 
     start_launcher()
 
@@ -59,7 +78,10 @@ def main():
 
         # clean exit? (launcher writes stop.flag after correct password)
         if os.path.exists(STOP_FLAG):
-            os.remove(STOP_FLAG)
+            try:
+                os.remove(STOP_FLAG)
+            except Exception:
+                pass
             break                      # guardian retires 🫡
 
         # launcher killed dirty? resurrect it
