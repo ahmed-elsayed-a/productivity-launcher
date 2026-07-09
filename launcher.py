@@ -48,23 +48,35 @@ except ImportError:
 
 # ---------------------------------------------------------------------
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CONFIG_FILE = os.path.join(BASE_DIR, "config.json")
 
-# password.dat lives in ProgramData — admin can protect it there while
-# the launcher (running as a normal user) can still read it.
+# All writable data (config + password) lives in ProgramData —
+# because Program Files is read-only for standard users, the app
+# could never save settings if they sat next to launcher.py.
 DATA_DIR = os.path.join(os.environ.get("ProgramData", BASE_DIR),
                         "ProductivityLauncher")
+try:
+    os.makedirs(DATA_DIR, exist_ok=True)
+    _probe = os.path.join(DATA_DIR, ".write_test")
+    with open(_probe, "w") as _f:
+        _f.write("ok")
+    os.remove(_probe)
+except Exception:
+    DATA_DIR = BASE_DIR          # last-resort fallback
+
+CONFIG_FILE = os.path.join(DATA_DIR, "config.json")
 PASSWORD_FILE = os.path.join(DATA_DIR, "password.dat")
 
-# migrate: if an old password.dat sits next to the app, move it over
-_old_pw = os.path.join(BASE_DIR, "password.dat")
-if os.path.exists(_old_pw) and not os.path.exists(PASSWORD_FILE):
-    try:
-        os.makedirs(DATA_DIR, exist_ok=True)
-        import shutil
-        shutil.move(_old_pw, PASSWORD_FILE)
-    except Exception:
-        PASSWORD_FILE = _old_pw   # fall back if we can't write there
+# migrate old files sitting next to the app (pre-ProgramData versions)
+import shutil
+for _fname, _target in (("config.json", CONFIG_FILE),
+                        ("password.dat", PASSWORD_FILE)):
+    _old = os.path.join(BASE_DIR, _fname)
+    if os.path.exists(_old) and not os.path.exists(_target) \
+            and os.path.abspath(_old) != os.path.abspath(_target):
+        try:
+            shutil.move(_old, _target)
+        except Exception:
+            pass
 
 DEFAULT_CONFIG = {
     "planner_url": "https://ahmed-elsayed-a.github.io",
@@ -83,8 +95,16 @@ else:
 
 
 def save_config():
-    with open(CONFIG_FILE, "w", encoding="utf-8") as f:
-        json.dump(CONFIG, f, indent=2, ensure_ascii=False)
+    try:
+        with open(CONFIG_FILE, "w", encoding="utf-8") as f:
+            json.dump(CONFIG, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        try:
+            messagebox.showerror(
+                "Couldn't save settings",
+                f"Failed to write:\n{CONFIG_FILE}\n\n{e}")
+        except Exception:
+            pass
 
 
 # ---------------------------------------------------------------------
