@@ -2,98 +2,111 @@
 
 **Don't resist distraction. Kill it.**
 
-A fullscreen focus mode for Windows built on one rule: **only what you
-add exists.** Your chosen apps and websites live on a clean launcher —
-everything else closes itself automatically. Getting out needs a
-password that someone else keeps.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
+[![Language: Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
-## Features
+A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes itself automatically within seconds. Getting out needs a password that someone else keeps.
 
-- ✅ **Whitelist mode** — no block lists. Anything you didn't allow gets closed within seconds
-- 🌐 **Websites as apps** — type `https://site.com` and it opens as a clean window: no address bar, no tabs, no wandering
-- 🗓️ **Built-in planner button** — pairs with [my daily planner](https://ahmed-elsayed-a.github.io) (set your own URL in `config.json`)
-- 🖼️ **3 built-in wallpapers** — embedded in the app, rotate every 3 hours; or pick your own image
-- 🕐 **Mond-style clock** — day, date and time in the classic Rainmeter look
-- 🔑 **Family-held password** — stored as a salted hash; exit and settings are locked behind it
-- 🥷 **Guardian process** — force-close the launcher and it's back in 3 seconds
-- 👤 **Per-user** — runs on your Windows account only; other users on the PC are untouched
+---
 
-## Setup (5 minutes)
+## ✨ Features
 
-**1.** Install [Python](https://python.org/downloads) — check ✅ **"Add Python to PATH"** during install
+- 🎯 **Whitelist Mode** — No block lists. Anything you didn't explicitly allow gets closed within seconds.
+- 🌐 **Websites as Apps** — Type `https://site.com` and it opens as a clean window: no address bar, no tabs, no wandering.
+- 🗓️ **Built-in Planner Button** — Pairs with [my daily planner](https://ahmed-elsayed-a.github.io/) (set your own URL in `config.json`).
+- 🖼️ **3 Built-in Wallpapers** — Embedded in the app, rotating every 3 hours; or pick your own custom image.
+- 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
+- 🔑 **Family-Held Password** — Stored safely as a salted hash. Exit and Settings are locked behind it.
+- 🥷 **Guardian Process** — If you try to force-close the launcher, the guardian process brings it right back in 3 seconds.
+- 👤 **Per-User Setup** — Runs only on your Windows account; other accounts on the PC are completely untouched.
 
-**2.** Press `Win + R` → type `cmd` → Enter → paste → Enter:
-```
+---
+
+## 🚀 Setup Guide (Under 5 Minutes)
+
+You only need **two files** to run this app: `launcher.py` and `guardian.py`.
+
+### Step 1: Install Python
+Download and install [Python](https://python.org/downloads). 
+> ⚠️ **Important:** During installation, make sure to check the box that says **"Add Python to PATH"**!
+
+### Step 2: Install Dependencies
+Open your Command Prompt (`Win + R` → type `cmd` → press **Enter**) and paste the following command, then press **Enter**:
+```bash
 pip install psutil pygetwindow pillow
 ```
 
-**3.** Download these 4 files into one folder:
-`launcher.py` · `guardian.py` · `SETUP.bat` · `START.bat`
+### Step 3: Download the Files
+Download these two files into a single folder on your computer:
+* 🖥️ **`launcher.py`**
+* 🛡️ **`guardian.py`** (Note: If your file is named `guardian1.py` on GitHub, rename it to `guardian.py`!)
 
-**4.** Double-click **`SETUP.bat`** — the launcher opens as a normal,
-free window (setup mode)
+### Step 4: Configure & Run
+1. Right-click **`launcher.py`** → click **Open with** → select **Python** (or **Python Launcher for Windows**).
+2. The launcher will open as a normal, free window (Setup Mode).
+3. Click the **⚙ Settings** button in the bottom-left:
+   * Type a website URL → press **Enter** (the button is created and named automatically).
+   * Or click **📂 Browse .exe** to select a local program.
+   * *Remember: this whitelist is everything that will exist once focus mode is locked!*
+4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
 
-**5.** Click **⚙ Settings** (bottom-left):
-- Type a website → Enter (button is named automatically)
-- Or **📂 Browse .exe** to add a program
-- Remember: this list is everything that will exist in focus mode
+---
 
-**6.** A FAMILY MEMBER types a password twice → **🔒 Set & Lock**
-→ fullscreen locked mode, active from now on
+## 🖥️ Create a Desktop Shortcut for Daily Use
 
-**7.** Daily use: double-click **`START.bat`**
-(desktop icon: right-click it → Send to → Desktop)
+To open the Productivity Launcher quickly every day, create a desktop shortcut:
 
-## Lock it down for real (recommended)
+1. Right-click **`launcher.py`** in your folder.
+2. Hover over **Send to** → click **Desktop (create shortcut)**.
+3. Go to your Desktop and locate the new shortcut.
+4. To run it, simply double-click it! 
+   * *If it doesn't open with Python by default:* Right-click the shortcut → click **Open with** → click **Choose another app** → select **Python** (and check the box that says **"Always use this app to open .py files"**).
 
-Out of the box, the app is honor-system: you could delete its files
-yourself. To make it genuinely tamper-proof, an ADMIN (family member)
-does this once:
+---
 
-1. **Move the folder** to `C:\Program Files\ProductivityLauncher`
-   (copy it there, delete the old one — needs admin approval)
-2. **Update your shortcuts** (desktop + auto-start toggle: turn it
-   OFF → ON once in Settings so it learns the new path)
-3. **Your daily account must be a Standard user, not Administrator**
-   (Settings → Accounts → Family & other users)
-4. The password file lives in `C:\ProgramData\ProductivityLauncher\` —
-   the admin can restrict it: right-click → Properties → Security →
-   your user: Read only
+## 🔒 Lock It Down for Real (Un-bypassable Mode)
 
-Result: deleting the app, resetting the password, or killing the
-protection all require the admin password — which you don't know.
+Out of the box, the app relies on the honor system: you could technically delete the Python files to exit. To make it genuinely tamper-proof, an Administrator (like a family member) can set this up once:
 
-## Using it alone? (no family around)
+1. **Move the folder** containing your files to a system directory, such as `C:\Program Files\ProductivityLauncher` (requires Admin approval to delete/modify files).
+2. **Update your shortcut** on your desktop to point to the new path.
+3. **Set your daily account as a Standard User**, not an Administrator (Settings → Accounts → Other Users).
+4. **Restrict the password file**: 
+   The password file lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → clicking **Properties** → **Security** → selecting your daily Standard user account → clicking **Edit** → checking **Deny** for "Write" and "Delete" permissions.
+   
+*Result: Deleting the app, resetting the password, or terminating the guardian process will now require an Administrator password—which you do not know!*
 
-The password only works if YOU don't know it. Solo tricks:
+---
 
-- **The random mash:** look away from the screen and mash 20+ random
-  characters into the password boxes (copy-paste the same mash into
-  both). Now nobody on Earth knows it 
-- **The remote friend:** any friend types a password over a call and
-  keeps it in their phone. Instant "family member," remote edition
-- **The envelope:** write it on paper, seal it, leave it somewhere
-  genuinely annoying to reach
+## 👤 Using It Alone? (No family around)
 
-Even as an admin who could technically rip the app out — every extra
-step is a chance for the craving to die. Cravings live 2–5 minutes;
-friction just has to outlast the wave.
+The password locking mechanism works best when you don't know the password. If you are using this completely solo, try these clever tricks:
 
-## Common questions
+* **The Random Mash:** Look away from your keyboard and mash 20+ random keys into the password boxes (copy and paste the same random mash into both boxes). Click Set & Lock. Now, literally nobody on Earth knows the password!
+* **The Remote Friend:** Have a friend over Discord or a phone call type a password for you and save it on their phone. They are now your virtual, remote guardian!
+* **The Sealed Envelope:** Write a complex password on a physical piece of paper, seal it inside an envelope, and place it somewhere genuinely annoying to reach (like in your garage, basement, or car trunk). 
+  * *Why this works:* Procrastination cravings usually last only **2–5 minutes**. Adding physical friction is often enough to outlast the craving!
 
-**Forgot to add an app?** Whoever holds the password enters it →
-Settings → add it.
+---
 
-**Can an expert bypass it?** A true administrator can beat ANY blocker —
-Cold Turkey included. That's why the Standard-account step matters:
-no admin rights, no bypass. The app's job is stopping *you at 1 AM*,
-and locked down properly, it does 
+## 💬 Frequently Asked Questions
 
-## Built with
+**Q: What if I forgot to add a necessary app?**  
+**A:** Have your password holder enter the password on the exit screen → go to **⚙ Settings** → add the application or website.
 
-Pure Python + Tkinter. No frameworks. Wallpapers embedded as base64 —
-the whole app is two files.
+**Q: Can an expert bypass this?**  
+**A:** A true Windows administrator can bypass any blocker. That is why the **Standard Account** step is highly recommended. It stops you at 1 AM when your willpower is depleted, and when locked down properly, it is incredibly secure.
 
-## License
+---
 
-MIT — free to use, copy, and improve.DO NOT FORGET CREADITS
+## 🛠️ Built With
+
+* **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
+* **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
+
+---
+
+## 📄 License
+
+Distributed under the **MIT License**. Free to use, modify, and distribute. **Do not forget credits!**
