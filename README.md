@@ -18,64 +18,54 @@ A fullscreen focus mode for Windows built on one rule: **only what you add exist
 - 🖼️ **3 Built-in Wallpapers** — Embedded in the app, rotating every 3 hours; or pick your own custom image.
 - 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
 - 🔑 **Family-Held Password** — Stored safely as a salted hash. Exit and Settings are locked behind it.
-- 🥷 **Guardian Process** — If you try to force-close the launcher, the guardian process brings it right back in 3 seconds.
 - 👤 **Per-User Setup** — Runs only on your Windows account; other accounts on the PC are completely untouched.
 
 ---
 
-## 🚀 Setup Guide (Under 5 Minutes)
+## 🚀 Setup Guide (Under 2 Minutes) — Recommended
 
-You only need **two files** to run this app: `launcher.py` and `guardian.py`.
+Most people should use the ready-made `.exe` — no Python, no dependencies, nothing to install.
 
-### Step 1: Install Python
-Download and install [Python](https://python.org/downloads). 
-> ⚠️ **Important:** During installation, make sure to check the box that says **"Add Python to PATH"**!
+### Step 1: Download the App
 
-### Step 2: Install Dependencies
-Open your Command Prompt (`Win + R` → type `cmd` → press **Enter**) and paste the following command, then press **Enter**:
-```bash
-pip install psutil pygetwindow pillow
-```
+1. Go to the [**Releases**](https://github.com/ahmed-elsayed-a/productivity-launcher/releases) page.
+2. Under the latest release, click **`ProductivityLauncher.exe`** to download it.
 
-### Step 3: Download the Files
-Download these two files into a single folder on your computer:
-* 🖥️ **`launcher.py`**
-* 🛡️ **`guardian.py`** (Note: If your file is named `guardian1.py` on GitHub, rename it to `guardian.py`!)
+### Step 2: Save It Somewhere Permanent
 
-### Step 4: Configure & Run
-1. Right-click **`launcher.py`** → click **Open with** → select **Python** (or **Python Launcher for Windows**).
-2. The launcher will open as a normal, free window (Setup Mode).
+Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\ProductivityLauncher\`. Don't leave it in your Downloads folder — the app stores its settings next to where it's run, and you don't want to lose them if you clean out Downloads later.
+
+### Step 3: Run It
+
+1. Double-click **`ProductivityLauncher.exe`**.
+   > ⚠️ Windows may show a **"Windows protected your PC"** SmartScreen warning because the app isn't code-signed. Click **More info** → **Run anyway**. This is expected for a small independent project — the source code is fully open above for anyone to inspect.
+2. The launcher opens as a normal, free window (Setup Mode).
 3. Click the **⚙ Settings** button in the bottom-left:
-   * Type a website URL → press **Enter** (the button is created and named automatically).
-   * Or click **📂 Browse .exe** to select a local program.
-   * *Remember: this whitelist is everything that will exist once focus mode is locked!*
+   - Type a website URL → press **Enter** (the button is created and named automatically).
+   - Or click **📂 Browse .exe** to select a local program.
+   - _Remember: this whitelist is everything that will exist once focus mode is locked!_
 4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
 
 ---
 
 ## 🖥️ Create a Desktop Shortcut for Daily Use
 
-To open the Productivity Launcher quickly every day, create a desktop shortcut:
-
-1. Right-click **`launcher.py`** in your folder.
+1. Right-click **`ProductivityLauncher.exe`**.
 2. Hover over **Send to** → click **Desktop (create shortcut)**.
-3. Go to your Desktop and locate the new shortcut.
-4. To run it, simply double-click it! 
-   * *If it doesn't open with Python by default:* Right-click the shortcut → click **Open with** → click **Choose another app** → select **Python** (and check the box that says **"Always use this app to open .py files"**).
+3. Go to your Desktop and double-click the new shortcut any time you want to launch it.
 
 ---
 
 ## 🔒 Lock It Down for Real (Un-bypassable Mode)
 
-Out of the box, the app relies on the honor system: you could technically delete the Python files to exit. To make it genuinely tamper-proof, an Administrator (like a family member) can set this up once:
+Out of the box, the app relies on the honor system: you could technically delete the `.exe` to exit. To make it genuinely tamper-proof, an Administrator (like a family member) can set this up once:
 
-1. **Move the folder** containing your files to a system directory, such as `C:\Program Files\ProductivityLauncher` (requires Admin approval to delete/modify files).
+1. **Move the `.exe`** to a system directory, such as `C:\Program Files\ProductivityLauncher`, that requires Admin approval to modify or delete.
 2. **Update your shortcut** on your desktop to point to the new path.
 3. **Set your daily account as a Standard User**, not an Administrator (Settings → Accounts → Other Users).
-4. **Restrict the password file**: 
-   The password file lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → clicking **Properties** → **Security** → selecting your daily Standard user account → clicking **Edit** → checking **Deny** for "Write" and "Delete" permissions.
-   
-*Result: Deleting the app, resetting the password, or terminating the guardian process will now require an Administrator password—which you do not know!*
+4. **Restrict the password file**: it lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → **Properties** → **Security** → selecting your daily Standard user account → **Edit** → checking **Deny** for "Write" and "Delete" permissions.
+
+_Result: Deleting the app or resetting the password will now require an Administrator password — which you do not know!_
 
 ---
 
@@ -83,27 +73,61 @@ Out of the box, the app relies on the honor system: you could technically delete
 
 The password locking mechanism works best when you don't know the password. If you are using this completely solo, try these clever tricks:
 
-* **The Random Mash:** Look away from your keyboard and mash 20+ random keys into the password boxes (copy and paste the same random mash into both boxes). Click Set & Lock. Now, literally nobody on Earth knows the password!
-* **The Remote Friend:** Have a friend over Discord or a phone call type a password for you and save it on their phone. They are now your virtual, remote guardian!
-* **The Sealed Envelope:** Write a complex password on a physical piece of paper, seal it inside an envelope, and place it somewhere genuinely annoying to reach (like in your garage, basement, or car trunk). 
-  * *Why this works:* Procrastination cravings usually last only **2–5 minutes**. Adding physical friction is often enough to outlast the craving!
+- **The Random Mash:** Look away from your keyboard and mash 20+ random keys into the password boxes (copy and paste the same random mash into both boxes). Click Set & Lock. Now, literally nobody on Earth knows the password!
+- **The Remote Friend:** Have a friend over Discord or a phone call type a password for you and save it on their phone. They are now your virtual, remote guardian!
+- **The Sealed Envelope:** Write a complex password on a physical piece of paper, seal it inside an envelope, and place it somewhere genuinely annoying to reach (like in your garage, basement, or car trunk).
+  - _Why this works:_ Procrastination cravings usually last only **2–5 minutes**. Adding physical friction is often enough to outlast the craving!
 
 ---
 
 ## 💬 Frequently Asked Questions
 
-**Q: What if I forgot to add a necessary app?**  
+**Q: What if I forgot to add a necessary app?**
+
 **A:** Have your password holder enter the password on the exit screen → go to **⚙ Settings** → add the application or website.
 
-**Q: Can an expert bypass this?**  
+**Q: Can an expert bypass this?**
+
 **A:** A true Windows administrator can bypass any blocker. That is why the **Standard Account** step is highly recommended. It stops you at 1 AM when your willpower is depleted, and when locked down properly, it is incredibly secure.
+
+**Q: Is the `.exe` safe if it's not code-signed?**
+
+**A:** The `.exe` is built directly from the same source code available in this repository, so anyone can review exactly what it does. If you'd rather not trust an unsigned binary, use the **Run from Source** method below instead.
 
 ---
 
 ## 🛠️ Built With
+AHMED ELSAYED with these tools:
 
-* **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
-* **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
+- **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
+- **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
+- **PyInstaller** — Used to package `launcher.py` into the standalone `.exe` release.
+
+---
+
+## 👨‍💻 Running From Source (For Developers)
+
+If you'd rather run the Python source directly instead of the `.exe` — to inspect the code, modify it, or build your own release — here's how.
+
+### Option A: Download the Script Directly
+
+1. Install [Python](https://python.org/downloads).
+   > ⚠️ **Important:** During installation, check the box that says **"Add Python to PATH"**!
+2. Open Command Prompt (`Win + R` → type `cmd` → **Enter**) and install dependencies:
+   ```
+   pip install psutil pygetwindow pillow
+   ```
+3. Download **`launcher.py`** from this repository into its own folder.
+4. Right-click **`launcher.py`** → **Open with** → **Python**.
+
+### Option B: Clone the Repository
+
+```
+git clone https://github.com/ahmed-elsayed-a/productivity-launcher.git
+cd productivity-launcher
+pip install psutil pygetwindow pillow
+python launcher.py
+```
 
 ---
 
