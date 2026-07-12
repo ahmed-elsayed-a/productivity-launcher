@@ -47,7 +47,13 @@ except ImportError:
     PIL_OK = False
 
 # ---------------------------------------------------------------------
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# When frozen into an exe by PyInstaller, sys.frozen is set and
+# sys.executable is the exe itself.
+FROZEN = getattr(sys, "frozen", False)
+if FROZEN:
+    BASE_DIR = os.path.dirname(os.path.abspath(sys.executable))
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # All writable data (config + password) lives in ProgramData —
 # because Program Files is read-only for standard users, the app
@@ -185,12 +191,17 @@ def autostart_enabled():
 
 
 def enable_autostart():
-    """Write a tiny .bat into THIS user's Startup folder."""
-    guardian = os.path.join(BASE_DIR, "guardian.py")
+    """Write a tiny .bat into THIS user's Startup folder.
+    One-file mode: starts THIS same program (exe or script)."""
+    if FROZEN:
+        run_line = f'start "" "{sys.executable}"\r\n'
+    else:
+        me = os.path.abspath(__file__)
+        run_line = f'start "" pythonw "{me}"\r\n'
     content = (
         "@echo off\r\n"
         f'cd /d "{BASE_DIR}"\r\n'
-        f'start "" pythonw "{guardian}"\r\n'
+        + run_line
     )
     os.makedirs(startup_dir(), exist_ok=True)
     with open(autostart_file(), "w") as f:
@@ -637,15 +648,17 @@ class Launcher:
                 fl.write("clean exit")
         except Exception:
             pass
-        # AND kill guardian directly — no timing race, no resurrection
+        # AND kill any guardian directly — no timing race, no resurrection
         try:
             me = os.getpid()
-            for proc in psutil.process_iter(["pid", "cmdline"]):
+            for proc in psutil.process_iter(["pid", "name", "cmdline"]):
                 try:
                     if proc.pid == me:
                         continue
+                    name = (proc.info["name"] or "").lower()
                     cmd = " ".join(proc.info["cmdline"] or [])
-                    if "guardian.py" in cmd:
+                    if (name == "guardian.exe" or "guardian.py" in cmd
+                            or "--guard" in cmd):
                         proc.kill()
                 except Exception:
                     pass
@@ -3599,5 +3612,96 @@ WALLPAPERS_B64 = [
 ]
 
 
+# ---------------------------------------------------------------------
+# BUILT-IN GUARDIAN 🥷 (one-file mode)
+# ---------------------------------------------------------------------
+# The app launches a hidden copy of itself with --guard. That copy
+# watches the main app and resurrects it if it's killed. The correct
+# password exit writes stop.flag, which retires the guardian.
+
+STOP_FLAG = os.path.join(DATA_DIR, "stop.flag")
+
+
+def _my_command(extra_arg=None):
+    """Command list to start this same program (exe or script)."""
+    if FROZEN:
+        cmd = [sys.executable]
+    else:
+        python = sys.executable
+        pw = python.replace("python.exe", "pythonw.exe")
+        if os.path.exists(pw):
+            python = pw
+        cmd = [python, os.path.abspath(__file__)]
+    if extra_arg:
+        cmd.append(extra_arg)
+    return cmd
+
+
+def _launcher_running():
+    """Is a MAIN (non-guard) copy of this program running?"""
+    me = os.getpid()
+    my_name = os.path.basename(sys.executable if FROZEN else __file__).lower()
+    for proc in psutil.process_iter(["pid", "name", "cmdline"]):
+        try:
+            if proc.pid == me:
+                continue
+            cmd = proc.info["cmdline"] or []
+            joined = " ".join(cmd).lower()
+            if "--guard" in joined:
+                continue                       # guards don't count
+            name = (proc.info["name"] or "").lower()
+            if FROZEN:
+                if name == my_name:
+                    return True
+            else:
+                if my_name in joined:
+                    return True
+        except Exception:
+            pass
+    return False
+
+
+def _guard_already_running():
+    me = os.getpid()
+    for proc in psutil.process_iter(["pid", "cmdline"]):
+        try:
+            if proc.pid == me:
+                continue
+            joined = " ".join(proc.info["cmdline"] or []).lower()
+            if "--guard" in joined:
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def run_guardian():
+    """The hidden --guard process: watch and resurrect."""
+    if os.path.exists(STOP_FLAG):
+        try:
+            os.remove(STOP_FLAG)
+        except Exception:
+            pass
+    while True:
+        time.sleep(3)
+        if os.path.exists(STOP_FLAG):
+            try:
+                os.remove(STOP_FLAG)
+            except Exception:
+                pass
+            break                              # clean exit -> retire
+        if not _launcher_running():
+            subprocess.Popen(_my_command())    # resurrect the app
+
+
 if __name__ == "__main__":
-    Launcher().run()
+    if "--guard" in sys.argv:
+        run_guardian()
+    else:
+        # start my own bodyguard (only one)
+        try:
+            if not _guard_already_running():
+                subprocess.Popen(_my_command("--guard"))
+        except Exception:
+            pass
+        Launcher().run()
