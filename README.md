@@ -5,7 +5,6 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![Language: Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-
 A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes itself automatically within seconds. Getting out needs a password that someone else keeps.
 
 ---
@@ -14,6 +13,7 @@ A fullscreen focus mode for Windows built on one rule: **only what you add exist
 
 - 🎯 **Whitelist Mode** — No block lists. Anything you didn't explicitly allow gets closed within seconds.
 - 🌐 **Websites as Apps** — Type `https://site.com` and it opens as a clean window: no address bar, no tabs, no wandering.
+- 🎓 **Distraction-Free Course Links** — Allow only a specific page/course path on a site, or only a specific YouTube channel (Shorts excluded), instead of the whole website.
 - 🗓️ **Built-in Planner Button** — Pairs with [my daily planner](https://ahmed-elsayed-a.github.io/) (set your own URL in `config.json`).
 - 🖼️ **3 Built-in Wallpapers** — Embedded in the app, rotating every 3 hours; or pick your own custom image.
 - 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
@@ -45,6 +45,33 @@ Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\Produ
    - Or click **📂 Browse .exe** to select a local program.
    - _Remember: this whitelist is everything that will exist once focus mode is locked!_
 4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
+
+---
+
+## 🎓 Take a Course, Not a Rabbit Hole
+
+Normally, a whitelisted website is unlocked entirely — for example, adding `youtube.com` lets the whole site through, recommendations, Shorts, and all. But you can lock a website entry down to **just one specific path or one specific YouTube channel**, so you can study without opening the door to the rest of the site.
+
+**Example: A specific course page or docs subsection**
+
+1. In **⚙ Settings**, enter the exact URL of the course/page you want, e.g.:
+   ```
+   https://www.coursera.org/learn/machine-learning
+   ```
+2. Press Enter. That entry — and any page *underneath* that path (e.g. `.../machine-learning/lecture/1`) — will be reachable. Anything else on the same domain (the homepage, other courses, unrelated pages) stays blocked.
+
+**Example: A specific YouTube channel, without Shorts**
+
+1. In **⚙ Settings**, enter the channel's handle URL, e.g.:
+   ```
+   https://www.youtube.com/@3blue1brown
+   ```
+2. Press Enter. Now:
+   - The channel's page and its videos are reachable.
+   - Any individual video is checked against the channel's real ownership (via YouTube's own public metadata) before it's allowed — so a link to a video from a *different* channel won't slip through, even if it opens inside a YouTube tab.
+   - **Shorts are always blocked**, even Shorts posted by the same allowed channel — no infinite-scroll rabbit hole.
+
+> ⚠️ **Requirement:** These path/channel restrictions only work with **Google Chrome, Microsoft Edge, Brave, or Opera** set as your browser in Settings — Firefox and "System default" can only allow/block a whole domain, not a specific path or channel. See the **Frequently Asked Questions** below for why.
 
 ---
 
@@ -90,6 +117,10 @@ The password locking mechanism works best when you don't know the password. If y
 
 **A:** A true Windows administrator can bypass any blocker. That is why the **Standard Account** step is highly recommended. It stops you at 1 AM when your willpower is depleted, and when locked down properly, it is incredibly secure.
 
+**Q: Why do course/channel restrictions require Chrome, Edge, Brave, or Opera specifically?**
+
+**A:** Those four browsers are all built on the same underlying engine (Chromium) and expose a local debugging interface the launcher uses to check every page you open in real time and close anything outside the allowed path or channel. Firefox doesn't expose that interface in current versions, so it can only be used with whole-domain website entries, not path- or channel-level restrictions.
+
 **Q: Is the `.exe` safe if it's not code-signed?**
 
 **A:** The `.exe` is built directly from the same source code available in this repository, so anyone can review exactly what it does. If you'd rather not trust an unsigned binary, use the **Run from Source** method below instead.
@@ -97,7 +128,6 @@ The password locking mechanism works best when you don't know the password. If y
 ---
 
 ## 🛠️ Built With
-AHMED ELSAYED with these tools:
 
 - **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
 - **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
