@@ -7,6 +7,7 @@
 [![Language: Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
 A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes itself automatically within seconds. Getting out needs a password that someone else keeps.
+<img width="1100" height="700" alt="setup-mode-empty" src="https://github.com/user-attachments/assets/24b8fa33-02f1-4321-b490-79846c1b2c8f" />
 
 > 🎓 **Taking a course on YouTube?** Whitelist just that one channel — not all of YouTube. Recommendations, unrelated videos, and Shorts stay locked out, so "just one video" never turns into an hour of scrolling. [See how it works ↓](#-take-a-course-not-a-rabbit-hole)
 
@@ -22,7 +23,7 @@ A fullscreen focus mode for Windows built on one rule: **only what you add exist
 - 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
 - 🔑 **Family-Held Password** — Stored safely as a salted hash. Exit and Settings are locked behind it.
 - 👤 **Per-User Setup** — Runs only on your Windows account; other accounts on the PC are completely untouched.
-
+<img width="1920" height="1080" alt="Screenshot (10)" src="https://github.com/user-attachments/assets/44f1113d-5fc1-49e1-b02e-dd271a3fdfb0" />
 ---
 
 ## 🚀 Setup Guide (Under 2 Minutes) — Recommended
@@ -48,6 +49,7 @@ Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\Produ
    - Or click **📂 Browse .exe** to select a local program.
    - _Remember: this whitelist is everything that will exist once focus mode is locked!_
 4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
+<img width="1920" height="1080" alt="Screenshot (11)" src="https://github.com/user-attachments/assets/20ec537f-2e2a-41ea-8988-e0bd116a6c9d" />
 
 ---
 
