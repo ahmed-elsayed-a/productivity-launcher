@@ -146,8 +146,6 @@ The password locking mechanism works best when you don't know the password. If y
 
 ## 🛠️ Built With
 
-AHMED ELSAYED, using some AI help, and:
-
 - **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
 - **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
 - **PyInstaller** — Used to package `launcher.py` into the standalone `.exe` release.
