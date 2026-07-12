@@ -6,8 +6,11 @@
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![Language: Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 
-A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes itself automatically within seconds. Getting out needs a password that someone else keeps.
-<img width="1100" height="700" alt="setup-mode-empty" src="https://github.com/user-attachments/assets/24b8fa33-02f1-4321-b490-79846c1b2c8f" />
+A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes 
+itself automatically within seconds. Getting out needs a password that someone else keeps.
+
+<img width="1920" height="1080" alt="Screenshot (9)" src="https://github.com/user-attachments/assets/8163684d-a33f-411d-ae06-21ef64feadbb" />
+*Fullscreen focus mode, locked. The counter at the top is live — every app or tab outside the whitelist gets closed automatically, and this app is counting every one it kills.*
 
 > 🎓 **Taking a course on YouTube?** Whitelist just that one channel — not all of YouTube. Recommendations, unrelated videos, and Shorts stay locked out, so "just one video" never turns into an hour of scrolling. [See how it works ↓](#-take-a-course-not-a-rabbit-hole)
 
@@ -23,7 +26,7 @@ A fullscreen focus mode for Windows built on one rule: **only what you add exist
 - 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
 - 🔑 **Family-Held Password** — Stored safely as a salted hash. Exit and Settings are locked behind it.
 - 👤 **Per-User Setup** — Runs only on your Windows account; other accounts on the PC are completely untouched.
-<img width="1920" height="1080" alt="Screenshot (10)" src="https://github.com/user-attachments/assets/44f1113d-5fc1-49e1-b02e-dd271a3fdfb0" />
+
 ---
 
 ## 🚀 Setup Guide (Under 2 Minutes) — Recommended
@@ -49,7 +52,9 @@ Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\Produ
    - Or click **📂 Browse .exe** to select a local program.
    - _Remember: this whitelist is everything that will exist once focus mode is locked!_
 4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
-<img width="1920" height="1080" alt="Screenshot (11)" src="https://github.com/user-attachments/assets/20ec537f-2e2a-41ea-8988-e0bd116a6c9d" />
+
+<img width="1100" height="700" alt="setup-mode-empty(1)" src="https://github.com/user-attachments/assets/3463c745-5998-4f79-9eaa-3592fed53cfd" />
+*Fresh lock — 0 distractions blocked so far. Exit and Settings are both gated behind the password you just set.*
 
 ---
 
@@ -78,6 +83,9 @@ Normally, a whitelisted website is unlocked entirely — for example, adding `yo
    - Any individual video is checked against the channel's real ownership (via YouTube's own public metadata) before it's allowed — so a link to a video from a *different* channel won't slip through, even if it opens inside a YouTube tab.
    - **Shorts are always blocked**, even Shorts posted by the same allowed channel — no infinite-scroll rabbit hole.
 
+<img width="544" height="697" alt="settings" src="https://github.com/user-attachments/assets/852dcb5a-83b2-40ed-8ab1-8b757f9bae62" />
+*The 🔒 icon next to `@3blue1brown` and `coursera.org` marks entries locked to one channel or one path — `notion.so` below them has no restriction and stays fully open.*
+
 > ⚠️ **Requirement:** These path/channel restrictions only work with **Google Chrome, Microsoft Edge, Brave, or Opera** set as your browser in Settings — Firefox and "System default" can only allow/block a whole domain, not a specific path or channel. See the **Frequently Asked Questions** below for why.
 
 ---
@@ -100,6 +108,8 @@ Out of the box, the app relies on the honor system: you could technically delete
 4. **Restrict the password file**: it lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → **Properties** → **Security** → selecting your daily Standard user account → **Edit** → checking **Deny** for "Write" and "Delete" permissions.
 
 _Result: Deleting the app or resetting the password will now require an Administrator password — which you do not know!_
+
+> 💡 If you're setting this up alone, the same idea still works: have someone else set both your Windows Administrator password **and** the app's lock password, so neither one is something you know.
 
 ---
 
