@@ -5,15 +5,19 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![OS: Windows](https://img.shields.io/badge/OS-Windows-0078D4?logo=windows&logoColor=white)](https://www.microsoft.com/windows)
 [![Language: Python](https://img.shields.io/badge/Language-Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
 A fullscreen focus mode for Windows built on one rule: **only what you add exists.** Your chosen apps and websites live on a clean launcher — everything else closes itself automatically within seconds. Getting out needs a password that someone else keeps.
 
----
+## ✨ Feature✨ 
 
-## ✨ Features
+##✨ NEW Feature
+> 🎓 **Taking a course on YouTube? ** Whitelist just that one channel — not all of YouTube. Recommendations, unrelated videos, and Shorts stay locked out, so "just one video" never turns into an hour of scrolling. [See how it works ↓](#-take-a-course-not-a-rabbit-hole)
 
+##ALREADY IN ✨ Features
+
+- 🎓 **Distraction-Free Course Links** — The standout feature: whitelist a single YouTube channel or a single course/page path instead of a whole website. Learn without the rabbit hole — recommendations, unrelated videos, and Shorts are all still blocked.
 - 🎯 **Whitelist Mode** — No block lists. Anything you didn't explicitly allow gets closed within seconds.
 - 🌐 **Websites as Apps** — Type `https://site.com` and it opens as a clean window: no address bar, no tabs, no wandering.
-- 🎓 **Distraction-Free Course Links** — Allow only a specific page/course path on a site, or only a specific YouTube channel (Shorts excluded), instead of the whole website.
 - 🗓️ **Built-in Planner Button** — Pairs with [my daily planner](https://ahmed-elsayed-a.github.io/) (set your own URL in `config.json`).
 - 🖼️ **3 Built-in Wallpapers** — Embedded in the app, rotating every 3 hours; or pick your own custom image.
 - 🕐 **Mond-style Clock** — Elegant day, date, and time displays in the classic minimalist Rainmeter look.
@@ -21,6 +25,7 @@ A fullscreen focus mode for Windows built on one rule: **only what you add exist
 - 👤 **Per-User Setup** — Runs only on your Windows account; other accounts on the PC are completely untouched.
 
 ---
+
 
 ## 🚀 Setup Guide (Under 2 Minutes) — Recommended
 
@@ -31,11 +36,8 @@ Most people should use the ready-made `.exe` — no Python, no dependencies, not
 1. Go to the [**Releases**](https://github.com/ahmed-elsayed-a/productivity-launcher/releases) page.
 2. Under the latest release, click **`ProductivityLauncher.exe`** to download it.
 
-### Step 2: Save It Somewhere Permanent
 
-Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\ProductivityLauncher\`. Don't leave it in your Downloads folder — the app stores its settings next to where it's run, and you don't want to lose them if you clean out Downloads later.
-
-### Step 3: Run It
+### Step 2: Run It
 
 1. Double-click **`ProductivityLauncher.exe`**.
    > ⚠️ Windows may show a **"Windows protected your PC"** SmartScreen warning because the app isn't code-signed. Click **More info** → **Run anyway**. This is expected for a small independent project — the source code is fully open above for anyone to inspect.
@@ -47,10 +49,26 @@ Move `ProductivityLauncher.exe` into a folder you'll keep, e.g. `Documents\Produ
 4. Have a **Family Member** or friend type a lock password twice, then click **🔒 Set & Lock**. The app is now running in fullscreen locked mode!
 
 ---
+### Step 3: Save It Somewhere Permanent
+## 🔒 Lock It Down for Real (Un-bypassable Mode)
+
+Out of the box, the app relies on the honor system: you could technically delete the `.exe` to exit. To make it genuinely tamper-proof, an Administrator (like a family member) can set this up once:
+
+1. **Move the `.exe`** to a system directory, such as `C:\Program Files\ProductivityLauncher`, that requires Admin approval to modify or delete.
+2. **Update your shortcut** on your desktop to point to the new path.
+3. **Set your daily account as a Standard User**, not an Administrator (Settings → Accounts → Other Users).
+4. **Restrict the password file**: it lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → **Properties** → **Security** → selecting your daily Standard user account → **Edit** → checking **Deny** for "Write" and "Delete" permissions.
+
+_Result: Deleting the app or resetting the password will now require an Administrator password — which you do not know!_
+
+
+
 
 ## 🎓 Take a Course, Not a Rabbit Hole
 
-Normally, a whitelisted website is unlocked entirely — for example, adding `youtube.com` lets the whole site through, recommendations, Shorts, and all. But you can lock a website entry down to **just one specific path or one specific YouTube channel**, so you can study without opening the door to the rest of the site.
+**This is the feature that makes this launcher different from a plain website blocker.**
+
+Normally, a whitelisted website is unlocked entirely — for example, adding `youtube.com` lets the whole site through, recommendations, Shorts, and all. But you can lock a website entry down to **just one specific path or one specific YouTube channel**, so you can study without opening the door to the rest of the site. Take that Udemy course, watch that YouTube lecture series, or read those docs — with zero risk of "just checking one notification" turning into an hour lost.
 
 **Example: A specific course page or docs subsection**
 
@@ -80,19 +98,6 @@ Normally, a whitelisted website is unlocked entirely — for example, adding `yo
 1. Right-click **`ProductivityLauncher.exe`**.
 2. Hover over **Send to** → click **Desktop (create shortcut)**.
 3. Go to your Desktop and double-click the new shortcut any time you want to launch it.
-
----
-
-## 🔒 Lock It Down for Real (Un-bypassable Mode)
-
-Out of the box, the app relies on the honor system: you could technically delete the `.exe` to exit. To make it genuinely tamper-proof, an Administrator (like a family member) can set this up once:
-
-1. **Move the `.exe`** to a system directory, such as `C:\Program Files\ProductivityLauncher`, that requires Admin approval to modify or delete.
-2. **Update your shortcut** on your desktop to point to the new path.
-3. **Set your daily account as a Standard User**, not an Administrator (Settings → Accounts → Other Users).
-4. **Restrict the password file**: it lives in `C:\ProgramData\ProductivityLauncher\`. The Admin can restrict it by right-clicking the folder → **Properties** → **Security** → selecting your daily Standard user account → **Edit** → checking **Deny** for "Write" and "Delete" permissions.
-
-_Result: Deleting the app or resetting the password will now require an Administrator password — which you do not know!_
 
 ---
 
@@ -128,7 +133,7 @@ The password locking mechanism works best when you don't know the password. If y
 ---
 
 ## 🛠️ Built With
-
+AHMED ELSAYED, using some Ai help and:
 - **Pure Python + Tkinter** — Native GUI library. No heavy frameworks, clean performance.
 - **Base64 Wallpaper Embeds** — Wallpapers are completely embedded in the code, keeping the project extremely lightweight.
 - **PyInstaller** — Used to package `launcher.py` into the standalone `.exe` release.
@@ -150,17 +155,8 @@ If you'd rather run the Python source directly instead of the `.exe` — to insp
 3. Download **`launcher.py`** from this repository into its own folder.
 4. Right-click **`launcher.py`** → **Open with** → **Python**.
 
-### Option B: Clone the Repository
-
-```
-git clone https://github.com/ahmed-elsayed-a/productivity-launcher.git
-cd productivity-launcher
-pip install psutil pygetwindow pillow
-python launcher.py
-```
-
 ---
 
 ## 📄 License
 
-Distributed under the **MIT License**. Free to use, modify, and distribute. **Do not forget credits!**
+Distributed under the **MIT License**. Free to use, modify, and distribute. **Do not forget credits! (optional)**
