@@ -26,6 +26,10 @@ import subprocess
 import sys
 import threading
 import time
+import re
+import urllib.error
+import urllib.parse
+import urllib.request
 import tkinter as tk
 from tkinter import messagebox, filedialog
 
@@ -88,16 +92,47 @@ DEFAULT_CONFIG = {
     "planner_url": "https://ahmed-elsayed-a.github.io",
     "wallpaper": "auto",
     "allowed_apps": [],
-    "check_interval_seconds": 2.0
+    "check_interval_seconds": 2.0,
+    "browser": "System default"
 }
 
-if os.path.exists(CONFIG_FILE):
-    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-        CONFIG = json.load(f)
-    for k, v in DEFAULT_CONFIG.items():
-        CONFIG.setdefault(k, v)
+# A damaged or manually edited config should not prevent the app from opening.
+try:
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+            loaded_config = json.load(f)
+        CONFIG = loaded_config if isinstance(loaded_config, dict) else {}
+    else:
+        CONFIG = {}
+except (OSError, json.JSONDecodeError, TypeError, ValueError):
+    CONFIG = {}
+
+for k, v in DEFAULT_CONFIG.items():
+    CONFIG.setdefault(k, v.copy() if isinstance(v, list) else v)
+
+# Repair invalid values without deleting the user's valid settings.
+if not isinstance(CONFIG.get("allowed_apps"), list):
+    CONFIG["allowed_apps"] = []
 else:
-    CONFIG = dict(DEFAULT_CONFIG)
+    repaired_apps = []
+    for app in CONFIG["allowed_apps"]:
+        if not (isinstance(app, dict)
+                and isinstance(app.get("name"), str) and app["name"].strip()
+                and isinstance(app.get("path"), str) and app["path"].strip()):
+            continue
+        repaired = {"name": app["name"], "path": app["path"]}
+        if isinstance(app.get("restriction"), dict):
+            repaired["restriction"] = app["restriction"]
+        repaired_apps.append(repaired)
+    CONFIG["allowed_apps"] = repaired_apps
+if not isinstance(CONFIG.get("planner_url"), str) or not CONFIG["planner_url"].strip():
+    CONFIG["planner_url"] = DEFAULT_CONFIG["planner_url"]
+if not isinstance(CONFIG.get("check_interval_seconds"), (int, float)):
+    CONFIG["check_interval_seconds"] = DEFAULT_CONFIG["check_interval_seconds"]
+else:
+    CONFIG["check_interval_seconds"] = max(
+        0.5, min(float(CONFIG["check_interval_seconds"]), 60.0)
+    )
 
 
 def save_config():
@@ -114,30 +149,388 @@ def save_config():
 
 
 # ---------------------------------------------------------------------
-# Websites open as clean app windows — user only types the URL
+# Websites — browser selection + optional URL/channel restrictions
 # ---------------------------------------------------------------------
-def find_browser():
-    candidates = [
-        "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-        "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe",
-        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-        "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-        os.path.expandvars("%LocalAppData%\\Google\\Chrome\\Application\\chrome.exe"),
-    ]
-    for c in candidates:
-        if os.path.exists(c):
-            return c
+BROWSER_OPTIONS = (
+    "System default",
+    "Google Chrome",
+    "Microsoft Edge",
+    "Mozilla Firefox",
+    "Brave",
+    "Opera",
+)
+
+BROWSER_PATHS = {
+    "Google Chrome": (
+        r"C:\Program Files\Google\Chrome\Application\chrome.exe",
+        r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+        os.path.expandvars(
+            r"%LocalAppData%\Google\Chrome\Application\chrome.exe"
+        ),
+    ),
+    "Microsoft Edge": (
+        r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+        r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+    ),
+    "Mozilla Firefox": (
+        r"C:\Program Files\Mozilla Firefox\firefox.exe",
+        r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+        os.path.expandvars(r"%LocalAppData%\Mozilla Firefox\firefox.exe"),
+    ),
+    "Brave": (
+        r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+        r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+        os.path.expandvars(
+            r"%LocalAppData%\BraveSoftware\Brave-Browser\Application\brave.exe"
+        ),
+    ),
+    "Opera": (
+        os.path.expandvars(r"%LocalAppData%\Programs\Opera\opera.exe"),
+        os.path.expandvars(r"%LocalAppData%\Programs\Opera GX\opera.exe"),
+        r"C:\Program Files\Opera\opera.exe",
+        r"C:\Program Files\Opera GX\opera.exe",
+    ),
+}
+
+# Chromium browsers share one URL-monitoring implementation. Each browser gets
+# a separate local debugging port and persistent restricted profile.
+CHROMIUM_BROWSERS = {"Google Chrome", "Microsoft Edge", "Brave", "Opera"}
+CHROMIUM_PORTS = {
+    "Google Chrome": 9231,
+    "Microsoft Edge": 9232,
+    "Brave": 9233,
+    "Opera": 9234,
+}
+
+
+def find_browser(browser_name):
+    """Return the installed executable for a selected browser, if found."""
+    for browser_path in BROWSER_PATHS.get(browser_name, ()):
+        if browser_path and os.path.isfile(browser_path):
+            return browser_path
     return None
 
 
-def open_in_app_mode(url):
-    browser = find_browser()
-    if browser:
-        subprocess.Popen([browser, f"--app={url}"])
-    else:
-        import webbrowser
-        webbrowser.open(url)
+def _normalized_host(host):
+    host = (host or "").lower().split(":", 1)[0].rstrip(".")
+    return host[4:] if host.startswith("www.") else host
 
+
+def _parsed_http_url(url):
+    """Return a parsed HTTP(S) URL, or None for unsupported/unsafe schemes."""
+    try:
+        parsed = urllib.parse.urlsplit(url.strip())
+    except (AttributeError, ValueError):
+        return None
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+        return None
+    return parsed
+
+
+def make_url_restriction(url):
+    """Create a reusable restriction rule from a website start URL."""
+    parsed = _parsed_http_url(url)
+    if not parsed:
+        return None
+    host = _normalized_host(parsed.hostname)
+    path = urllib.parse.unquote(parsed.path or "/")
+
+    # A YouTube @handle gets special ownership checking for every video.
+    if host in {"youtube.com", "m.youtube.com"}:
+        match = re.match(r"^/@([^/?#]+)", path, re.IGNORECASE)
+        if match:
+            return {
+                "type": "youtube_channel",
+                "host": "youtube.com",
+                "handle": match.group(1).lower(),
+            }
+
+    # Generic sites permit the selected path and all of its descendants.
+    prefix = path.rstrip("/") or "/"
+    return {"type": "path_prefix", "host": host, "path": prefix}
+
+
+def restriction_for_start_url(url):
+    """Find the restriction attached to an allowed website entry."""
+    for app in CONFIG.get("allowed_apps", []):
+        if app.get("path") == url and isinstance(app.get("restriction"), dict):
+            return app["restriction"]
+    return None
+
+
+def _configured_web_rules():
+    """Return all configured web rules, including safe legacy-domain rules."""
+    rules = []
+    for app in CONFIG.get("allowed_apps", []):
+        url = app.get("path", "")
+        parsed = _parsed_http_url(url) if isinstance(url, str) else None
+        if not parsed:
+            continue
+        restriction = app.get("restriction")
+        if isinstance(restriction, dict):
+            rules.append(restriction)
+        else:
+            # Old website entries remain compatible: their whole domain is allowed.
+            rules.append({
+                "type": "domain",
+                "host": _normalized_host(parsed.hostname),
+            })
+
+    # The built-in planner must remain reachable when another restricted site
+    # is open in the same dedicated browser profile.
+    planner = _parsed_http_url(CONFIG.get("planner_url", ""))
+    if planner:
+        rules.append({
+            "type": "domain",
+            "host": _normalized_host(planner.hostname),
+        })
+    return rules
+
+
+def _video_id_from_youtube_url(parsed):
+    host = _normalized_host(parsed.hostname)
+    path = parsed.path or "/"
+    if host == "youtu.be":
+        return path.strip("/").split("/", 1)[0] or None
+    if host not in {"youtube.com", "m.youtube.com"}:
+        return None
+    if path == "/watch":
+        return urllib.parse.parse_qs(parsed.query).get("v", [None])[0]
+    match = re.match(r"^/(?:live|embed)/([^/?#]+)", path, re.IGNORECASE)
+    return match.group(1) if match else None
+
+
+_YOUTUBE_OWNER_CACHE = {}
+_YOUTUBE_CACHE_LOCK = threading.Lock()
+
+
+def youtube_video_belongs_to_handle(video_id, handle):
+    """Verify video ownership using YouTube's public oEmbed metadata."""
+    if not video_id or not re.fullmatch(r"[A-Za-z0-9_-]{6,20}", video_id):
+        return False
+    key = (video_id, handle.lower())
+    with _YOUTUBE_CACHE_LOCK:
+        if key in _YOUTUBE_OWNER_CACHE:
+            return _YOUTUBE_OWNER_CACHE[key]
+
+    watch_url = "https://www.youtube.com/watch?v=" + urllib.parse.quote(video_id)
+    endpoint = (
+        "https://www.youtube.com/oembed?format=json&url="
+        + urllib.parse.quote(watch_url, safe="")
+    )
+    allowed = False
+    try:
+        request = urllib.request.Request(
+            endpoint, headers={"User-Agent": "ProductivityLauncher/2"}
+        )
+        with urllib.request.urlopen(request, timeout=4) as response:
+            metadata = json.loads(response.read().decode("utf-8"))
+        author_url = metadata.get("author_url", "")
+        author = _parsed_http_url(author_url)
+        if author:
+            match = re.match(
+                r"^/@([^/?#]+)", urllib.parse.unquote(author.path), re.IGNORECASE
+            )
+            allowed = bool(match and match.group(1).lower() == handle.lower())
+    except (OSError, ValueError, TypeError, json.JSONDecodeError,
+            urllib.error.URLError):
+        # Fail closed: if ownership cannot be verified, do not allow escape.
+        allowed = False
+
+    with _YOUTUBE_CACHE_LOCK:
+        _YOUTUBE_OWNER_CACHE[key] = allowed
+    return allowed
+
+
+def _rule_allows_url(rule, parsed):
+    host = _normalized_host(parsed.hostname)
+    path = urllib.parse.unquote(parsed.path or "/")
+    rule_type = rule.get("type")
+    rule_host = _normalized_host(rule.get("host", ""))
+
+    if rule_type == "domain":
+        return host == rule_host
+
+    if rule_type == "path_prefix":
+        if host != rule_host:
+            return False
+        prefix = str(rule.get("path", "/")).rstrip("/") or "/"
+        return prefix == "/" or path == prefix or path.startswith(prefix + "/")
+
+    if rule_type == "youtube_channel":
+        handle = str(rule.get("handle", "")).lower()
+        if not handle:
+            return False
+
+        # Channel pages are allowed except for their Shorts section.
+        if host in {"youtube.com", "m.youtube.com"}:
+            channel_match = re.match(r"^/@([^/?#]+)(/.*)?$", path, re.IGNORECASE)
+            if channel_match and channel_match.group(1).lower() == handle:
+                suffix = (channel_match.group(2) or "").lower()
+                return not (suffix == "/shorts" or suffix.startswith("/shorts/"))
+
+        # Shorts are always blocked, even when made by the approved channel.
+        if host in {"youtube.com", "m.youtube.com"} and path.startswith("/shorts/"):
+            return False
+
+        video_id = _video_id_from_youtube_url(parsed)
+        if video_id:
+            return youtube_video_belongs_to_handle(video_id, handle)
+        return False
+
+    return False
+
+
+def is_configured_url_allowed(url):
+    """Check a top-level browser URL against all website whitelist rules."""
+    parsed = _parsed_http_url(url)
+    if not parsed:
+        return False
+    return any(_rule_allows_url(rule, parsed) for rule in _configured_web_rules())
+
+
+class BrowserURLGuard(threading.Thread):
+    """Inspect Chromium top-level URLs and close pages outside the whitelist."""
+
+    def __init__(self):
+        super().__init__(daemon=True)
+        self.running = True
+        self.active_ports = set()
+        self.lock = threading.Lock()
+        self.blocks = 0
+
+    def register(self, port):
+        with self.lock:
+            self.active_ports.add(int(port))
+
+    def stop(self):
+        self.running = False
+
+    @staticmethod
+    def _read_json(url, timeout=0.6):
+        request = urllib.request.Request(
+            url, headers={"User-Agent": "ProductivityLauncher/2"}
+        )
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    def _close_target(self, port, target_id):
+        try:
+            # Chrome exposes this local endpoint specifically for closing a tab.
+            # Its response is plain text, not JSON.
+            request = urllib.request.Request(
+                f"http://127.0.0.1:{port}/json/close/{target_id}",
+                headers={"User-Agent": "ProductivityLauncher/2"}
+            )
+            with urllib.request.urlopen(request, timeout=0.8) as response:
+                response.read()
+            self.blocks += 1
+        except (OSError, ValueError, urllib.error.URLError):
+            pass
+
+    def inspect_port(self, port):
+        try:
+            targets = self._read_json(
+                f"http://127.0.0.1:{port}/json/list", timeout=0.6
+            )
+        except (OSError, ValueError, TypeError, json.JSONDecodeError,
+                urllib.error.URLError):
+            return
+
+        if not isinstance(targets, list):
+            return
+        for target in targets:
+            if not isinstance(target, dict) or target.get("type") != "page":
+                continue
+            url = target.get("url", "")
+            target_id = target.get("id", "")
+            # Ignore a brand-new empty target briefly; inspect once it navigates.
+            if url in {"", "about:blank"}:
+                continue
+            if not target_id or not is_configured_url_allowed(url):
+                self._close_target(port, target_id)
+
+    def run(self):
+        while self.running:
+            with self.lock:
+                ports = tuple(self.active_ports)
+            for port in ports:
+                self.inspect_port(port)
+            time.sleep(0.8)
+
+
+URL_GUARD = BrowserURLGuard()
+URL_GUARD.start()
+
+
+def _restricted_profile_dir(browser_name):
+    safe_name = re.sub(r"[^A-Za-z0-9_-]+", "_", browser_name)
+    path = os.path.join(DATA_DIR, "BrowserProfiles", safe_name)
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def open_in_app_mode(url):
+    """Open a website using the selected browser and enforce URL rules."""
+    parsed = _parsed_http_url(url) if isinstance(url, str) else None
+    if not parsed:
+        messagebox.showerror(
+            "Invalid website", "Enter a complete http:// or https:// website address."
+        )
+        return
+
+    url = url.strip()
+    restriction = restriction_for_start_url(url)
+    selected_browser = CONFIG.get("browser", "System default")
+    if selected_browser not in BROWSER_OPTIONS:
+        selected_browser = "System default"
+        CONFIG["browser"] = selected_browser
+        save_config()
+
+    # URL inspection requires a Chromium debugging endpoint. Normal legacy
+    # website entries can still use Firefox or the Windows default browser.
+    if restriction and selected_browser not in CHROMIUM_BROWSERS:
+        messagebox.showerror(
+            "Restricted browser required",
+            "Path and YouTube-channel restrictions require Google Chrome, "
+            "Microsoft Edge, Brave, or Opera.\n\n"
+            "Choose one of those browsers in Settings."
+        )
+        return
+
+    try:
+        if selected_browser == "System default":
+            os.startfile(url)
+            return
+
+        browser_path = find_browser(selected_browser)
+        if not browser_path:
+            messagebox.showerror(
+                "Browser not found",
+                f"{selected_browser} is not installed or could not be found.\n\n"
+                "Open Settings and choose another browser."
+            )
+            return
+
+        if selected_browser in CHROMIUM_BROWSERS:
+            port = CHROMIUM_PORTS[selected_browser]
+            profile = _restricted_profile_dir(selected_browser)
+            URL_GUARD.register(port)
+            subprocess.Popen([
+                browser_path,
+                f"--remote-debugging-port={port}",
+                f"--user-data-dir={profile}",
+                "--no-first-run",
+                "--no-default-browser-check",
+                f"--app={url}",
+            ])
+        elif selected_browser == "Mozilla Firefox":
+            subprocess.Popen([browser_path, "-new-window", url])
+    except OSError as exc:
+        messagebox.showerror(
+            "Couldn't open website",
+            f"Could not start {selected_browser}.\n\n{exc}"
+        )
 
 def domain_of(url):
     try:
@@ -160,10 +553,15 @@ def password_is_set():
 def check_password(attempt):
     if not password_is_set():
         return True
-    with open(PASSWORD_FILE, "r") as f:
-        salt_hex, stored = f.read().strip().split(":")
-    salt = bytes.fromhex(salt_hex)
-    return hashlib.sha256(salt + attempt.encode()).hexdigest() == stored
+    try:
+        with open(PASSWORD_FILE, "r", encoding="utf-8") as f:
+            salt_hex, stored = f.read().strip().split(":", 1)
+        salt = bytes.fromhex(salt_hex)
+        calculated = hashlib.sha256(salt + attempt.encode()).hexdigest()
+        # Constant-time comparison avoids leaking password-hash information.
+        return __import__("hmac").compare_digest(calculated, stored)
+    except (OSError, ValueError, TypeError):
+        return False
 
 
 def set_password(pw):
@@ -642,6 +1040,7 @@ class Launcher:
 
     def clean_exit(self):
         self.watchdog.stop()
+        URL_GUARD.stop()
         # write the stop flag (guardian's note)
         try:
             with open(os.path.join(DATA_DIR, "stop.flag"), "w") as fl:
@@ -674,7 +1073,8 @@ class Launcher:
         win = tk.Toplevel(self.root)
         win.title("Settings")
         win.configure(bg=self.BG)
-        w, h = 560, 640
+        # Extra height leaves room for browser and restriction controls.
+        w, h = 580, 740
         win.geometry(f"{w}x{h}+{self.root.winfo_screenwidth()//2 - w//2}"
                      f"+{self.root.winfo_screenheight()//2 - h//2}")
         win.grab_set()
@@ -694,7 +1094,8 @@ class Launcher:
                         font=("Segoe UI", 11), selectbackground=self.BLUE, height=9)
         lb.pack(fill="both", expand=True, padx=14)
         for a in CONFIG["allowed_apps"]:
-            lb.insert("end", a["name"])
+            lock_mark = "🔒 " if isinstance(a.get("restriction"), dict) else ""
+            lb.insert("end", lock_mark + a["name"])
 
         def refresh():
             win.destroy()
@@ -704,10 +1105,21 @@ class Launcher:
         entry = tk.Entry(card, bg=self.FIELD, fg=self.TEXT, relief="flat",
                          font=("Segoe UI", 11), insertbackground=self.TEXT)
         entry.pack(fill="x", padx=14, pady=(8, 2), ipady=5)
-        hint = "https://website.com   (or paste an app path)"
+        hint = "https://website.com/course   (or paste an app path)"
         entry.insert(0, hint)
         entry.bind("<FocusIn>", lambda e: entry.delete(0, "end")
                    if entry.get() == hint else None)
+
+        restrict_var = tk.BooleanVar(value=True)
+        tk.Checkbutton(
+            card,
+            text="🔒 Restrict websites to this path/channel",
+            variable=restrict_var,
+            bg=self.CARD, fg=self.TEXT,
+            activebackground=self.CARD, activeforeground=self.TEXT,
+            selectcolor=self.FIELD,
+            font=("Segoe UI", 9)
+        ).pack(anchor="w", padx=14, pady=(2, 0))
 
         def do_add(_e=None):
             val = entry.get().strip()
@@ -720,7 +1132,22 @@ class Launcher:
             else:
                 path = val
                 name = os.path.basename(val).replace(".exe", "").title() or val
-            CONFIG["allowed_apps"].append({"name": name, "path": path})
+            item = {"name": name, "path": path}
+            if path.startswith(("http://", "https://")) and restrict_var.get():
+                restriction = make_url_restriction(path)
+                if not restriction:
+                    messagebox.showerror(
+                        "Invalid website",
+                        "Enter a complete http:// or https:// website address."
+                    )
+                    return
+                item["restriction"] = restriction
+                if restriction.get("type") == "youtube_channel":
+                    item["name"] = "🌐 @" + restriction["handle"]
+            if any(a.get("path") == path for a in CONFIG["allowed_apps"]):
+                messagebox.showinfo("Already added", "That app or website is already listed.")
+                return
+            CONFIG["allowed_apps"].append(item)
             save_config()
             refresh()
         entry.bind("<Return>", do_add)
@@ -749,6 +1176,41 @@ class Launcher:
             tk.Button(rowb, text=txt, bg=color, fg="white", relief="flat",
                       font=("Segoe UI", 10, "bold"), padx=12, pady=4,
                       command=cmd).pack(side="left", padx=4)
+
+        # Browser selection for websites
+        browser_frame = tk.Frame(card, bg=self.CARD)
+        browser_frame.pack(fill="x", padx=14, pady=(0, 10))
+
+        tk.Label(browser_frame, text="🌐 Browser for websites:",
+                 bg=self.CARD, fg=self.TEXT,
+                 font=("Segoe UI", 10, "bold")).pack(side="left", padx=(0, 10))
+
+        current_browser = CONFIG.get("browser", "System default")
+        if current_browser not in BROWSER_OPTIONS:
+            current_browser = "System default"
+        browser_var = tk.StringVar(value=current_browser)
+
+        def browser_changed(choice):
+            if choice in BROWSER_OPTIONS:
+                CONFIG["browser"] = choice
+                save_config()
+
+        browser_menu = tk.OptionMenu(
+            browser_frame, browser_var, *BROWSER_OPTIONS,
+            command=browser_changed
+        )
+        browser_menu.config(
+            bg=self.FIELD, fg=self.TEXT,
+            activebackground=self.BLUE, activeforeground="white",
+            relief="flat", highlightthickness=0,
+            font=("Segoe UI", 10), width=18
+        )
+        browser_menu["menu"].config(
+            bg=self.FIELD, fg=self.TEXT,
+            activebackground=self.BLUE, activeforeground="white",
+            font=("Segoe UI", 10)
+        )
+        browser_menu.pack(side="right", fill="x", expand=True)
 
         # wallpaper
         wp = tk.Frame(win, bg=self.CARD)
